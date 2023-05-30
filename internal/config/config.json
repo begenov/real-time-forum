@@ -1,0 +1,16 @@
+{
+    "database":{
+        "driver":"sqlite3",
+        "dsn":"forum.db"
+    },
+    "server":{
+        "port":"8080",
+        "readtimeout":10,
+        "writetimeout":10,
+        "maxheadermegabytes":1
+    },
+    "token":{
+        "tokenttl":24,
+        "key":"forum"
+    }
+}
