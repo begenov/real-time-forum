@@ -6,27 +6,32 @@ import (
 	"os"
 )
 
-type database struct {
+type Database struct {
 	Driver string `json:"driver"`
 	Dsn    string `json:"dsn"`
 }
 
-type server struct {
+type Server struct {
 	Port               string `json:"port"`
 	ReadTimeout        int    `json:"readtimeout"`
 	WriteTimeout       int    `json:"writetimeout"`
 	MaxHeaderMegabytes int    `json:"maxheadermegabytes"`
 }
 
-type token struct {
+type Token struct {
 	Ttl int    `json:"tokenttl"`
 	Key string `json:"key"`
 }
 
+type Hash struct {
+	Cost int `json:"cost"`
+}
+
 type Config struct {
-	Database database `json:"database"`
-	Server   server   `json:"server"`
-	Token    token    `json:"token"`
+	Database Database `json:"database"`
+	Server   Server   `json:"server"`
+	Token    Token    `json:"token"`
+	Hash     Hash     `json:"hash"`
 }
 
 func Init(path string) (*Config, error) {
