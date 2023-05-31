@@ -19,7 +19,7 @@ func NewAuthorization(db *sql.DB) *AuthorizationRepo {
 
 func (r *AuthorizationRepo) Create(ctx context.Context, user domain.User) error {
 	stmt := `INSERT INTO user(nick_name, age, gender, first_name, last_name, email, password_hash) VALUES($1, $2, $3, $4, $5, $6, $7)`
-	_, err := r.db.ExecContext(ctx, stmt, user.Nickname, user.Age, user.Gender, user.FirstName, user.LastName, user.Password)
+	_, err := r.db.ExecContext(ctx, stmt, user.Nickname, user.Age, user.Gender, user.FirstName, user.LastName, user.Email, user.Password)
 
 	if err != nil {
 		return err
@@ -28,10 +28,19 @@ func (r *AuthorizationRepo) Create(ctx context.Context, user domain.User) error 
 	return nil
 }
 
+func (r *AuthorizationRepo) GetByID(ctx context.Context, id int) (domain.User, error) {
+	var user domain.User
+	stmt := `SELECT id, nick_name, age, gender, first_name, last_name, email, password_hash FROM user WHERE id = $1`
+	if err := r.db.QueryRowContext(ctx, stmt, id).Scan(&user.Id, &user.Nickname, &user.Age, &user.Gender, &user.FirstName, &user.LastName, &user.Email, &user.Password); err != nil {
+		return user, err
+	}
+	return user, nil
+}
+
 func (r *AuthorizationRepo) GetByNickname(ctx context.Context, nickname string) (domain.User, error) {
 	var user domain.User
-	stmt := `SELECT nick_name, age, gender, first_name, last_name, email, password_hash FROM user WHERE nick_name=$1`
-	if err := r.db.QueryRowContext(ctx, stmt, nickname).Scan(&user.Nickname, &user.Age, &user.FirstName, &user.LastName, &user.Email, &user.Password); err != nil {
+	stmt := `SELECT id, nick_name, age, gender, first_name, last_name, email, password_hash FROM user WHERE nick_name=$1`
+	if err := r.db.QueryRowContext(ctx, stmt, nickname).Scan(&user.Id, &user.Nickname, &user.Age, &user.FirstName, &user.LastName, &user.Email, &user.Password); err != nil {
 		return user, err
 	}
 	return user, nil
@@ -39,8 +48,8 @@ func (r *AuthorizationRepo) GetByNickname(ctx context.Context, nickname string) 
 
 func (r *AuthorizationRepo) GetByEmail(ctx context.Context, email string) (domain.User, error) {
 	var user domain.User
-	stmt := `SELECT nick_name, age, gender, first_name, last_name, email, password_hash FROM user WHERE email=$1`
-	if err := r.db.QueryRowContext(ctx, stmt, email).Scan(&user.Nickname, &user.Age, &user.FirstName, &user.LastName, &user.Email, &user.Password); err != nil {
+	stmt := `SELECT id, nick_name, age, gender, first_name, last_name, email, password_hash FROM user WHERE email=$1`
+	if err := r.db.QueryRowContext(ctx, stmt, email).Scan(&user.Id, &user.Nickname, &user.Age, &user.Gender, &user.FirstName, &user.LastName, &user.Email, &user.Password); err != nil {
 		return user, err
 	}
 	return user, nil
