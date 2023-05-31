@@ -30,9 +30,10 @@ func (r *SessionRepo) Create(ctx context.Context, session domain.Session) error 
 
 func (r *SessionRepo) GetSessionByUserID(ctx context.Context, userID int) (domain.Session, error) {
 	var session domain.Session
-	stmt := `SELECT user_id, token, expiration_time FROM session WHERE user_id = $1`
+	stmt := `SELECT * FROM session WHERE user_id = $1`
 
-	if err := r.db.QueryRowContext(ctx, stmt).Scan(&session.UserID, &session.Token, &session.ExpiresAt); err != nil {
+	row := r.db.QueryRowContext(ctx, stmt, userID)
+	if err := row.Scan(&session.Id, &session.UserID, &session.Token, &session.ExpiresAt); err != nil {
 		return session, err
 	}
 
@@ -48,9 +49,9 @@ func (r *SessionRepo) Update(ctx context.Context, session domain.Session) error 
 	return nil
 }
 
-func (r *SessionRepo) Delete(ctx context.Context, id int) error {
-	stmt := `DELETE * FROM session WHERE user_id = $1`
-	_, err := r.db.ExecContext(ctx, stmt, id)
+func (r *SessionRepo) Delete(ctx context.Context, value string) error {
+	stmt := `DELETE FROM session WHERE token = $1`
+	_, err := r.db.ExecContext(ctx, stmt, value)
 	if err != nil {
 		return err
 	}
