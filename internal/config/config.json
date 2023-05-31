@@ -12,5 +12,8 @@
     "token":{
         "tokenttl":24,
         "key":"forum"
+    },
+    "hash":{
+        "cost":10
     }
 }
