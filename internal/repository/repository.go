@@ -30,10 +30,19 @@ type Post interface {
 	DeletePost(ctx context.Context, id int) error
 }
 
+type Comment interface {
+	Create(ctx context.Context, comment domain.Comment) error
+	Update(ctx context.Context, comment domain.Comment) error
+	GetAllComment(ctx context.Context) ([]domain.Comment, error)
+	GetCommentByID(ctx context.Context, id int) (domain.Comment, error)
+	Delete(ctx context.Context, id int) error
+}
+
 type Repository struct {
 	Authorization Authorization
 	Session       Session
 	Post          Post
+	Comment       Comment
 }
 
 func NewRepository(db *sql.DB) *Repository {
@@ -41,5 +50,6 @@ func NewRepository(db *sql.DB) *Repository {
 		Authorization: NewAuthorization(db),
 		Session:       NewSession(db),
 		Post:          NewPostRepo(db),
+		Comment:       NewCommentRepo(db),
 	}
 }
