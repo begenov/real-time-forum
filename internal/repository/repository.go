@@ -22,14 +22,24 @@ type Session interface {
 	Delete(ctx context.Context, value string) error
 }
 
+type Post interface {
+	Create(ctx context.Context, post domain.Post) error
+	Update(ctx context.Context, post domain.Post) error
+	GetPostByID(ctx context.Context, id int) (domain.Post, error)
+	GetAllPosts(ctx context.Context) ([]domain.Post, error)
+	DeletePost(ctx context.Context, id int) error
+}
+
 type Repository struct {
 	Authorization Authorization
 	Session       Session
+	Post          Post
 }
 
 func NewRepository(db *sql.DB) *Repository {
 	return &Repository{
 		Authorization: NewAuthorization(db),
 		Session:       NewSession(db),
+		Post:          NewPostRepo(db),
 	}
 }
