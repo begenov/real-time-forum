@@ -33,9 +33,9 @@ type Post interface {
 type Comment interface {
 	Create(ctx context.Context, comment domain.Comment) error
 	Update(ctx context.Context, comment domain.Comment) error
+	Delete(ctx context.Context, id int) error
 	GetAllComment(ctx context.Context) ([]domain.Comment, error)
 	GetCommentByID(ctx context.Context, id int) (domain.Comment, error)
-	Delete(ctx context.Context, id int) error
 }
 
 type Repository struct {
