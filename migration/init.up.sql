@@ -15,4 +15,15 @@ CREATE TABLE IF NOT EXISTS session (
     token VARCHAR(64) NOT NULL,
     expiration_time TIMESTAMP NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE 
+);
+
+CREATE TABLE IF NOT EXISTS post (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    category TEXT NOT NULL, 
+    create_at TIMESTAMP NOT NULL, 
+    update_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 )
