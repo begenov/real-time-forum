@@ -26,4 +26,15 @@ CREATE TABLE IF NOT EXISTS post (
     create_at TIMESTAMP NOT NULL, 
     update_at TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS comment (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL, 
+    user_id INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    create_at TIMESTAMP NOT NULL, 
+    update_at TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES post (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
 )
