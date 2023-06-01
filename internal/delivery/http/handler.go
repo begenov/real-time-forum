@@ -23,7 +23,8 @@ func (h *Handler) Init() *mux.Router {
 }
 
 func (h *Handler) initRouter(router *mux.Router) {
-	h1 := v1.NewHandler(h.service)
+	v1 := v1.NewHandler(h.service)
 
-	h1.InitUserRouter(router)
+	v1.InitUserRouter(router)
+	v1.InitPostRouter(router)
 }
