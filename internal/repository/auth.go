@@ -57,10 +57,18 @@ func (r *AuthorizationRepo) GetByEmail(ctx context.Context, email string) (domai
 
 func (r *AuthorizationRepo) UpdatePassword(ctx context.Context, password string, id int) error {
 	stmt := `UPDATE user SET password_hash = $1 WHERE id = $2`
-	_, err := r.db.ExecContext(ctx, stmt, password, id)
+	res, err := r.db.ExecContext(ctx, stmt, password, id)
 
 	if err != nil {
 		return err
+	}
+
+	i, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if i == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil

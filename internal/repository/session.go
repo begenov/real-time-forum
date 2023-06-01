@@ -42,18 +42,33 @@ func (r *SessionRepo) GetSessionByUserID(ctx context.Context, userID int) (domai
 
 func (r *SessionRepo) Update(ctx context.Context, session domain.Session) error {
 	stmt := `UPDATE session SET token = $1, expiration_time = $2 WHERE user_id = $3`
-	_, err := r.db.ExecContext(ctx, stmt, session.Token, session.ExpiresAt, session.UserID)
+	res, err := r.db.ExecContext(ctx, stmt, session.Token, session.ExpiresAt, session.UserID)
 	if err != nil {
 		return err
+	}
+
+	i, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if i == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }
 
 func (r *SessionRepo) Delete(ctx context.Context, value string) error {
 	stmt := `DELETE FROM session WHERE token = $1`
-	_, err := r.db.ExecContext(ctx, stmt, value)
+	res, err := r.db.ExecContext(ctx, stmt, value)
 	if err != nil {
 		return err
+	}
+	i, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if i == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }

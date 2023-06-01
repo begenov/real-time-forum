@@ -35,9 +35,16 @@ func (r *PostRepo) Create(ctx context.Context, post domain.Post) error {
 func (r *PostRepo) Update(ctx context.Context, post domain.Post) error {
 	category := strings.Join(post.Category, " ")
 	stmt := `UPDATE post SET title = $1, description = $2, category = $3, update_at = $4 WHERE id = $5`
-	_, err := r.db.ExecContext(ctx, stmt, post.Title, post.Description, category, post.UpdateAt, post.ID)
+	res, err := r.db.ExecContext(ctx, stmt, post.Title, post.Description, category, post.UpdateAt, post.ID)
 	if err != nil {
 		return err
+	}
+	i, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if i == 0 {
+		return sql.ErrNoRows
 	}
 	return nil
 }
@@ -79,11 +86,18 @@ func (r *PostRepo) GetAllPosts(ctx context.Context) ([]domain.Post, error) {
 
 func (r *PostRepo) DeletePost(ctx context.Context, id int) error {
 	stmt := `DELETE FROM post WHERE id = $1`
-	_, err := r.db.ExecContext(ctx, stmt, id)
+	res, err := r.db.ExecContext(ctx, stmt, id)
 
 	if err != nil {
 		return err
 	}
 
+	i, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if i == 0 {
+		return sql.ErrNoRows
+	}
 	return nil
 }
