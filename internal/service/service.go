@@ -26,14 +26,24 @@ type Post interface {
 	Delete(ctx context.Context, id int) error
 }
 
+type Comment interface {
+	Create(ctx context.Context, comment domain.Comment) error
+	Update(ctx context.Context, comment domain.Comment) error
+	GetCommentById(ctx context.Context, id int) (domain.Comment, error)
+	GetAllComment(ctx context.Context) ([]domain.Comment, error)
+	Delete(ctx context.Context, id int) error
+}
+
 type Service struct {
-	User User
-	Post Post
+	User    User
+	Post    Post
+	Comment Comment
 }
 
 func NewService(repo *repository.Repository, hash hash.PasswordHasher, manager auth.TokenManager, cfg *config.Config) *Service {
 	return &Service{
-		User: NewUserService(repo.Authorization, repo.Session, hash, manager, cfg.Token),
-		Post: NewPostService(repo.Post),
+		User:    NewUserService(repo.Authorization, repo.Session, hash, manager, cfg.Token),
+		Post:    NewPostService(repo.Post),
+		Comment: NewCommentService(repo.Comment),
 	}
 }
