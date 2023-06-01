@@ -15,10 +15,10 @@ import (
 
 func (h *Handler) InitPostRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/post", h.getAllPosts).Methods("GET")
-	router.HandleFunc("/api/v1/post/create", h.createPost).Methods("POST")
 	router.HandleFunc("/api/v1/post/{id}", h.getPostByID).Methods("GET")
-	router.HandleFunc("/api/v1/post/{id}", h.updatePost).Methods("PUT")
-	router.HandleFunc("/api/v1/post/{id}", h.deletePost).Methods("DELETE")
+	router.HandleFunc("/api/v1/post/create", h.createPost).Methods("POST")
+	router.HandleFunc("/api/v1/post/update/{id}", h.updatePost).Methods("PUT")
+	router.HandleFunc("/api/v1/post/delete/{id}", h.deletePost).Methods("DELETE")
 
 }
 
