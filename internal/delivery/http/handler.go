@@ -27,4 +27,5 @@ func (h *Handler) initRouter(router *mux.Router) {
 
 	v1.InitUserRouter(router)
 	v1.InitPostRouter(router)
+	v1.InitCommentRouter(router)
 }
