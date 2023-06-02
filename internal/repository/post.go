@@ -101,3 +101,7 @@ func (r *PostRepo) DeletePost(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+func (r *PostRepo) GetAllCategory() {
+
+}
