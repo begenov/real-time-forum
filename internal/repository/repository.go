@@ -20,6 +20,7 @@ type Session interface {
 	GetSessionByUserID(ctx context.Context, userID int) (domain.Session, error)
 	Update(ctx context.Context, session domain.Session) error
 	Delete(ctx context.Context, value string) error
+	GetUserIDByToken(ctx context.Context, value string) (domain.Session, error)
 }
 
 type Post interface {
