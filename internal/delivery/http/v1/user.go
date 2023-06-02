@@ -19,7 +19,6 @@ func (h *Handler) InitUserRouter(router *mux.Router) {
 }
 
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
-
 	var inp domain.UserInput
 
 	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
@@ -50,7 +49,7 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 }
 
 type singIn struct {
-	Auth     string `json:"auth"`
+	Auth     string `json:"username"`
 	Password string `json:"password"`
 }
 
@@ -64,7 +63,6 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, err := h.service.User.SignIn(context.Background(), inp.Auth, inp.Password)
-
 	if err != nil {
 		msg := fmt.Sprintf("%v", err)
 		h.errorResponse(w, msg, http.StatusBadRequest)
