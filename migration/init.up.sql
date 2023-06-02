@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nick_name VARCHAR(32) NOT NULL,
     age INTEGER NOT NULL,
-    gender INTEGER NOT NULL, 
+    gender VARCHAR(32) NOT NULL, 
     first_name VARCHAR(32) NOT NULL,
     last_name VARCHAR(32) NOT NULL,
     email VARCHAR(32) NOT NULL, 
