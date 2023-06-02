@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -111,7 +110,7 @@ func (h *Handler) updatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var inp postInput
-	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
+	if err := parseInput(r.Body, &inp); err != nil {
 		h.handleError(w, http.StatusBadRequest, fmt.Sprintf("Failed to decode JSON: %v", err))
 		return
 	}

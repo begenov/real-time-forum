@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/begenov/real-time-forum/internal/domain"
@@ -49,7 +48,7 @@ type signIn struct {
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	var inp signIn
 
-	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
+	if err := parseInput(r.Body, inp); err != nil {
 		h.handleError(w, http.StatusBadRequest, "Failed to decode JSON: "+err.Error())
 		return
 	}

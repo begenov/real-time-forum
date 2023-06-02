@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -43,7 +42,7 @@ func (h *Handler) createComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var inp commentInput
-	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
+	if err := parseInput(r.Body, &inp); err != nil {
 		h.handleError(w, http.StatusBadRequest, "Failed to decode request body")
 		return
 	}
@@ -147,7 +146,7 @@ func (h *Handler) updateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var inp commentInput
-	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
+	if err := parseInput(r.Body, &inp); err != nil {
 		h.handleError(w, http.StatusBadRequest, "Failed to decode request body")
 		return
 	}
