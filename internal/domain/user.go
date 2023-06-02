@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type User struct {
 	Id        int
 	Nickname  string
@@ -9,6 +11,8 @@ type User struct {
 	LastName  string
 	Email     string
 	Password  string
+
+	ExpiresAt time.Time
 }
 
 type UserInput struct {
