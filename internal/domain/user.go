@@ -6,7 +6,7 @@ type User struct {
 	Id        int
 	Nickname  string
 	Age       int
-	Gender    int
+	Gender    string
 	FirstName string
 	LastName  string
 	Email     string
@@ -18,7 +18,7 @@ type User struct {
 type UserInput struct {
 	Nickname  string `json:"nickname"`
 	Age       int    `json:"age"`
-	Gender    int    `json:"gender"`
+	Gender    string `json:"gender"`
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
