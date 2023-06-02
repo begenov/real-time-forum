@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/begenov/real-time-forum/internal/domain"
@@ -28,6 +29,14 @@ func (s *CommentService) Update(ctx context.Context, comment domain.Comment) err
 		return err
 	}
 
+	if c.UserID != comment.UserID {
+		return errors.New("error")
+	}
+
+	if c.PostID != comment.PostID {
+		return errors.New("error")
+	}
+
 	if comment.Text == "" {
 		comment.Text = c.Text
 	}
@@ -46,6 +55,13 @@ func (s *CommentService) GetAllComment(ctx context.Context) ([]domain.Comment, e
 	return s.repo.GetAllComment(ctx)
 }
 
-func (s *CommentService) Delete(ctx context.Context, id int) error {
+func (s *CommentService) Delete(ctx context.Context, id int, userId int) error {
+	c, err := s.repo.GetCommentByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if c.UserID != userId {
+		return errors.New("error")
+	}
 	return s.repo.Delete(ctx, id)
 }
