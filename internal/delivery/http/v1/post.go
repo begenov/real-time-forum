@@ -11,8 +11,8 @@ import (
 )
 
 func (h *Handler) InitPostRouter(router *mux.Router) {
-	router.HandleFunc("/api/v1/post", h.getAllPosts).Methods("GET")
-	router.HandleFunc("/api/v1/post/{id}", h.getPostByID).Methods("GET")
+	router.HandleFunc("/api/v1/post", h.userIdentity(h.getAllPosts)).Methods("GET")
+	router.HandleFunc("/api/v1/post/{id}", h.userIdentity(h.getPostByID)).Methods("GET")
 	router.HandleFunc("/api/v1/post/create", h.userIdentity(h.createPost)).Methods("POST")
 	router.HandleFunc("/api/v1/post/update/{id}", h.userIdentity(h.updatePost)).Methods("PUT")
 	router.HandleFunc("/api/v1/post/delete/{id}", h.userIdentity(h.deletePost)).Methods("DELETE")
@@ -91,7 +91,7 @@ func (h *Handler) getPostByID(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) updatePost(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userID)
-	if userId.(int) <= 0 {
+	if userID, ok := userId.(int); !ok || userID <= 0 {
 		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -134,11 +134,10 @@ func (h *Handler) updatePost(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) deletePost(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userID)
-	if userId.(int) <= 0 {
+	if userID, ok := userId.(int); !ok || userID <= 0 {
 		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
-
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {

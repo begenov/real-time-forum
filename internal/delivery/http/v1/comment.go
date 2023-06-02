@@ -10,8 +10,8 @@ import (
 )
 
 func (h *Handler) InitCommentRouter(router *mux.Router) {
-	router.HandleFunc("/api/v1/post/comment", h.getAllComment)
-	router.HandleFunc("/api/v1/post/comment/{id}", (h.getCommentByID))
+	router.HandleFunc("/api/v1/post/comment", h.userIdentity(h.getAllComment))
+	router.HandleFunc("/api/v1/post/comment/{id}", h.userIdentity(h.getCommentByID))
 	router.HandleFunc("/api/v1/post/comment/create/{id}", h.userIdentity(h.createComment))
 	router.HandleFunc("/api/v1/post/comment/update/{id}", h.userIdentity(h.updateComment))
 	router.HandleFunc("/api/v1/post/comment/delete/{id}", h.userIdentity(h.deleteComment))
@@ -23,7 +23,7 @@ type commentInput struct {
 
 func (h *Handler) createComment(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userID)
-	if userId.(int) <= 0 {
+	if userID, ok := userId.(int); !ok || userID <= 0 {
 		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
@@ -102,8 +102,8 @@ func (h *Handler) getCommentByID(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) deleteComment(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userID)
-	if userId.(int) <= 0 {
-		h.handleError(w, http.StatusUnauthorized, "Status Unauthorized")
+	if userID, ok := userId.(int); !ok || userID <= 0 {
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -132,6 +132,12 @@ func (h *Handler) deleteComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updateComment(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value(userID)
+	if userID, ok := userId.(int); !ok || userID <= 0 {
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
@@ -155,6 +161,7 @@ func (h *Handler) updateComment(w http.ResponseWriter, r *http.Request) {
 		Text:     inp.Text,
 		UpdateAt: time.Now(),
 		Id:       id,
+		UserID:   userId.(int),
 	}); err != nil {
 		h.handleError(w, http.StatusInternalServerError, "Failed to update comment")
 		return

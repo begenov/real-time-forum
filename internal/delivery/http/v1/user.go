@@ -11,7 +11,7 @@ func (h *Handler) InitUserRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/sign-up", h.signUp).Methods("POST")
 	router.HandleFunc("/api/v1/sign-in", h.signIn).Methods("POST")
 	router.HandleFunc("/api/v1/log-out", h.logOut).Methods("POST")
-	router.HandleFunc("/api/v1/check-user", h.checkUser).Methods("GET")
+	router.HandleFunc("/api/v1/check-user", h.userIdentity(h.checkUser)).Methods("GET")
 }
 
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
@@ -94,13 +94,13 @@ func (h *Handler) logOut(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) checkUser(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session")
-	if err != nil {
+	userId := r.Context().Value(userID)
+	if userID, ok := userId.(int); !ok || userID <= 0 {
 		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	user, err := h.service.User.GetUserByToken(r.Context(), cookie.Value)
+	user, err := h.service.User.GetUserByID(r.Context(), userId.(int))
 	if err != nil {
 		h.handleError(w, http.StatusBadRequest, "Bad Request "+err.Error())
 		return
