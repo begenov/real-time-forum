@@ -24,7 +24,7 @@ func (h *Handler) Init() *mux.Router {
 
 func (h *Handler) initRouter(router *mux.Router) {
 	v1 := v1.NewHandler(h.service)
-
+	router.Use(h.corsHeaders)
 	v1.InitUserRouter(router)
 	v1.InitPostRouter(router)
 	v1.InitCommentRouter(router)
