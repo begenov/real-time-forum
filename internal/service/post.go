@@ -9,6 +9,8 @@ import (
 	"github.com/begenov/real-time-forum/internal/repository"
 )
 
+const ()
+
 type PostService struct {
 	repo repository.Post
 }

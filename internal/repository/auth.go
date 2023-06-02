@@ -40,7 +40,7 @@ func (r *AuthorizationRepo) GetByID(ctx context.Context, id int) (domain.User, e
 func (r *AuthorizationRepo) GetByNickname(ctx context.Context, nickname string) (domain.User, error) {
 	var user domain.User
 	stmt := `SELECT id, nick_name, age, gender, first_name, last_name, email, password_hash FROM user WHERE nick_name=$1`
-	if err := r.db.QueryRowContext(ctx, stmt, nickname).Scan(&user.Id, &user.Nickname, &user.Age, &user.FirstName, &user.LastName, &user.Email, &user.Password); err != nil {
+	if err := r.db.QueryRowContext(ctx, stmt, nickname).Scan(&user.Id, &user.Nickname, &user.Age, &user.Gender, &user.FirstName, &user.LastName, &user.Email, &user.Password); err != nil {
 		return user, err
 	}
 	return user, nil

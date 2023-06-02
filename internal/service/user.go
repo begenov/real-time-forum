@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/begenov/real-time-forum/internal/config"
@@ -45,10 +46,19 @@ func (s *UserService) SignUp(ctx context.Context, user domain.User) error {
 }
 
 func (s *UserService) SignIn(ctx context.Context, email string, password string) (domain.Session, error) {
-	user, err := s.auth.GetByEmail(ctx, email)
+	var user domain.User
+	var err error
+	if strings.ContainsAny(email, "@") {
+		user, err = s.auth.GetByEmail(ctx, email)
 
-	if err != nil {
-		return domain.Session{}, err
+		if err != nil {
+			return domain.Session{}, err
+		}
+	} else {
+		user, err = s.auth.GetByNickname(ctx, email)
+		if err != nil {
+			return domain.Session{}, err
+		}
 	}
 
 	if err = s.hash.CompareHashAndPassword(user.Password, password); err != nil {
