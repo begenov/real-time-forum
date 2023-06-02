@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/begenov/real-time-forum/internal/domain"
@@ -30,6 +31,10 @@ func (s *PostService) Update(ctx context.Context, post domain.Post) error {
 	p, err := s.repo.GetPostByID(ctx, post.ID)
 	if err != nil {
 		return err
+	}
+
+	if p.UserID != post.UserID {
+		return errors.New("no error")
 	}
 
 	if post.Title == "" {
@@ -61,6 +66,15 @@ func (s *PostService) GetAllPosts(ctx context.Context) ([]domain.Post, error) {
 	return s.repo.GetAllPosts(ctx)
 }
 
-func (s *PostService) Delete(ctx context.Context, id int) error {
+func (s *PostService) Delete(ctx context.Context, id int, userID int) error {
+	p, err := s.repo.GetPostByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if p.UserID != userID {
+		return errors.New("no error")
+	}
+
 	return s.repo.DeletePost(ctx, id)
 }
