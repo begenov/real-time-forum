@@ -1,6 +1,8 @@
 package http
 
 import (
+	"net/http"
+
 	v1 "github.com/begenov/real-time-forum/internal/delivery/http/v1"
 	"github.com/begenov/real-time-forum/internal/service"
 	"github.com/gorilla/mux"
@@ -16,15 +18,16 @@ func NewHandler(service *service.Service) *Handler {
 	}
 }
 
-func (h *Handler) Init() *mux.Router {
+func (h *Handler) Init() http.Handler {
 	router := mux.NewRouter()
+
 	h.initRouter(router)
-	return router
+	return h.setCorsHeaders(router)
 }
 
 func (h *Handler) initRouter(router *mux.Router) {
 	v1 := v1.NewHandler(h.service)
-	router.Use(h.corsHeaders)
+	router.Use(h.logMiddleware)
 	v1.InitUserRouter(router)
 	v1.InitPostRouter(router)
 	v1.InitCommentRouter(router)
