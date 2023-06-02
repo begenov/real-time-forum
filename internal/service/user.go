@@ -115,6 +115,20 @@ func (s *UserService) GetUserByID(ctx context.Context, id int) (domain.User, err
 	return s.auth.GetByID(ctx, id)
 }
 
+func (s *UserService) GetUserByToken(ctx context.Context, value string) (domain.User, error) {
+	session, err := s.session.GetUserIDByToken(ctx, value)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	user, err := s.auth.GetByID(ctx, session.UserID)
+	if err != nil {
+		return user, err
+	}
+	user.ExpiresAt = session.ExpiresAt
+	return user, nil
+}
+
 func (s *UserService) DeleteSession(ctx context.Context, value string) error {
 	return s.session.Delete(ctx, value)
 }
