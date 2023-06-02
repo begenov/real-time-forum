@@ -16,7 +16,7 @@ func (h *Handler) InitUserRouter(router *mux.Router) {
 
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	var inp domain.UserInput
-	err := parseInput(r.Body, inp)
+	err := parseInput(r.Body, &inp)
 	if err != nil {
 		h.handleError(w, http.StatusBadRequest, "Failed to decode JSON: "+err.Error())
 		return
@@ -48,7 +48,7 @@ type signIn struct {
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 	var inp signIn
 
-	if err := parseInput(r.Body, inp); err != nil {
+	if err := parseInput(r.Body, &inp); err != nil {
 		h.handleError(w, http.StatusBadRequest, "Failed to decode JSON: "+err.Error())
 		return
 	}
