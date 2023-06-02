@@ -16,8 +16,6 @@ func (h *Handler) InitPostRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/post/create", h.userIdentity(h.createPost)).Methods("POST")
 	router.HandleFunc("/api/v1/post/update/{id}", h.userIdentity(h.updatePost)).Methods("PUT")
 	router.HandleFunc("/api/v1/post/delete/{id}", h.userIdentity(h.deletePost)).Methods("DELETE")
-	router.HandleFunc("/api/v1/post/categories", h.userIdentity(h.deletePost)).Methods("DELETE")
-
 }
 
 type postInput struct {
