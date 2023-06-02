@@ -16,6 +16,7 @@ type User interface {
 	UpdatePassword(ctx context.Context, password string, id int) error
 	GetUserByID(ctx context.Context, id int) (domain.User, error)
 	DeleteSession(ctx context.Context, value string) error
+	GetUserByToken(ctx context.Context, value string) (domain.User, error)
 }
 
 type Post interface {
@@ -23,7 +24,7 @@ type Post interface {
 	Update(ctx context.Context, post domain.Post) error
 	GetPostById(ctx context.Context, id int) (domain.Post, error)
 	GetAllPosts(ctx context.Context) ([]domain.Post, error)
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, id int, userID int) error
 }
 
 type Comment interface {
@@ -31,7 +32,7 @@ type Comment interface {
 	Update(ctx context.Context, comment domain.Comment) error
 	GetCommentById(ctx context.Context, id int) (domain.Comment, error)
 	GetAllComment(ctx context.Context) ([]domain.Comment, error)
-	Delete(ctx context.Context, id int) error
+	Delete(ctx context.Context, id int, userId int) error
 }
 
 type Service struct {
