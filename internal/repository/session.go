@@ -40,6 +40,16 @@ func (r *SessionRepo) GetSessionByUserID(ctx context.Context, userID int) (domai
 	return session, nil
 }
 
+func (r *SessionRepo) GetUserIDByToken(ctx context.Context, value string) (domain.Session, error) {
+	var session domain.Session
+	stmt := `SELECT * FROM session WHERE token = $1`
+	row := r.db.QueryRowContext(ctx, stmt, value)
+	if err := row.Scan(&session.Id, &session.UserID, &session.Token, &session.ExpiresAt); err != nil {
+		return session, err
+	}
+	return session, nil
+}
+
 func (r *SessionRepo) Update(ctx context.Context, session domain.Session) error {
 	stmt := `UPDATE session SET token = $1, expiration_time = $2 WHERE user_id = $3`
 	res, err := r.db.ExecContext(ctx, stmt, session.Token, session.ExpiresAt, session.UserID)
