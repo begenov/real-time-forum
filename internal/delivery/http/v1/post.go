@@ -1,10 +1,8 @@
 package v1
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -14,33 +12,11 @@ import (
 )
 
 func (h *Handler) InitPostRouter(router *mux.Router) {
-
 	router.HandleFunc("/api/v1/post", h.getAllPosts).Methods("GET")
 	router.HandleFunc("/api/v1/post/{id}", h.getPostByID).Methods("GET")
 	router.HandleFunc("/api/v1/post/create", h.userIdentity(h.createPost)).Methods("POST")
 	router.HandleFunc("/api/v1/post/update/{id}", h.userIdentity(h.updatePost)).Methods("PUT")
 	router.HandleFunc("/api/v1/post/delete/{id}", h.userIdentity(h.deletePost)).Methods("DELETE")
-
-}
-
-func (h *Handler) getAllPosts(w http.ResponseWriter, r *http.Request) {
-	posts, err := h.service.Post.GetAllPosts(context.Background())
-	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
-		return
-	}
-
-	buf, err := json.Marshal(&posts)
-	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
-		return
-	}
-	fmt.Println(posts)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(buf)
 }
 
 type postInput struct {
@@ -50,111 +26,97 @@ type postInput struct {
 }
 
 func (h *Handler) createPost(w http.ResponseWriter, r *http.Request) {
-
 	userId := r.Context().Value(userID)
-	if userId.(int) <= 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, `{
-			"msg":"Status Unauthorized"
-		}`)
+	if userID, ok := userId.(int); !ok || userID <= 0 {
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	var inp postInput
-	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
-		msg := fmt.Sprintf("error decode: %v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+	if err := parseInput(r.Body, &inp); err != nil {
+		h.handleError(w, http.StatusBadRequest, "Failed to decode JSON: "+err.Error())
 		return
 	}
-	if err := h.service.Post.Create(context.Background(), domain.Post{
+
+	post := domain.Post{
 		Title:       inp.Title,
 		Description: inp.Description,
 		Category:    inp.Category,
 		CreateAt:    time.Now(),
 		UserID:      userId.(int),
 		UpdateAt:    time.Now(),
-	}); err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+	}
+
+	if err := h.service.Post.Create(r.Context(), post); err != nil {
+		h.handleError(w, http.StatusBadRequest, "Failed to create post: "+err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, `{
-		"msg":"Create Post"
-	}`)
+
+	h.writeJSONResponse(w, http.StatusOK, map[string]string{
+		"msg": "Post created successfully",
+	})
+}
+
+func (h *Handler) getAllPosts(w http.ResponseWriter, r *http.Request) {
+	posts, err := h.service.Post.GetAllPosts(r.Context())
+	if err != nil {
+		h.handleError(w, http.StatusBadRequest, "Failed to get posts")
+		return
+	}
+
+	h.writeJSONResponse(w, http.StatusOK, posts)
 }
 
 func (h *Handler) getPostByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
-		msg := "ID not found in URL path"
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "ID not found in URL path")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, fmt.Sprintf("Invalid ID: %v", err))
 		return
 	}
 
-	post, err := h.service.Post.GetPostById(context.Background(), id)
-
+	post, err := h.service.Post.GetPostById(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
-		return
-	}
-	body, err := json.Marshal(post)
-	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, fmt.Sprintf("Failed to get post: %v", err))
 		return
 	}
 
-	fmt.Println(post)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(body)
-
+	h.writeJSONResponse(w, http.StatusOK, post)
 }
 
 func (h *Handler) updatePost(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userID)
 	if userId.(int) <= 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, `{
-			"msg":"Status Unauthorized"
-		}`)
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
-		msg := "ID not found in URL path"
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "ID not found in URL path")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, fmt.Sprintf("Invalid ID: %v", err))
 		return
 	}
+
 	var inp postInput
 	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
-		msg := fmt.Sprintf("error decode: %v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, fmt.Sprintf("Failed to decode JSON: %v", err))
 		return
 	}
-	if err := h.service.Post.Update(context.Background(), domain.Post{
+
+	if err := h.service.Post.Update(r.Context(), domain.Post{
 		Title:       inp.Title,
 		Description: inp.Description,
 		Category:    inp.Category,
@@ -162,49 +124,41 @@ func (h *Handler) updatePost(w http.ResponseWriter, r *http.Request) {
 		ID:          id,
 		UserID:      userId.(int),
 	}); err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, fmt.Sprintf("Failed to update post: %v", err))
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, `{
-		"msg":"Update success"
-	}`)
+
+	h.writeJSONResponse(w, http.StatusOK, map[string]string{
+		"msg": "Update success",
+	})
 }
 
 func (h *Handler) deletePost(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userID)
 	if userId.(int) <= 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, `{
-			"msg":"Status Unauthorized"
-		}`)
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
+
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
-		msg := "ID not found in URL path"
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "ID not found in URL path")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, fmt.Sprintf("Invalid ID: %v", err))
 		return
 	}
+
 	if err := h.service.Post.Delete(r.Context(), id, userId.(int)); err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, fmt.Sprintf("Failed to delete post: %v", err))
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, `{
-		"msg":"Delete success"
-	}`)
+
+	h.writeJSONResponse(w, http.StatusOK, map[string]string{
+		"msg": "Delete success",
+	})
 }

@@ -2,9 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -28,173 +25,143 @@ type commentInput struct {
 func (h *Handler) createComment(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userID)
 	if userId.(int) <= 0 {
-		log.Println("comment")
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, `{
-			"msg":"Status Unauthorized"
-		}`)
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
-		msg := "ID not found in URL path"
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "ID not found in URL path")
 		return
 	}
 
 	postID, err := strconv.Atoi(idStr)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Invalid post ID")
 		return
 	}
 
 	var inp commentInput
 	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
-		msg := fmt.Sprintf("error decode: %v", err)
-
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Failed to decode request body")
 		return
 	}
 
-	if err := h.service.Comment.Create(r.Context(), domain.Comment{
+	comment := domain.Comment{
 		Text:     inp.Text,
 		CreateAt: time.Now(),
 		UpdateAt: time.Now(),
 		UserID:   userId.(int),
 		PostID:   postID,
-	}); err != nil {
+	}
 
-		msg := fmt.Sprintf("error decode: %v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+	if err := h.service.Comment.Create(r.Context(), comment); err != nil {
+		h.handleError(w, http.StatusInternalServerError, "Failed to create comment")
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, `{
-		"msg":"Create Comment"
-	}`)
+
+	h.writeJSONResponse(w, http.StatusOK, map[string]interface{}{
+		"msg": "Create Comment",
+	})
 }
 
 func (h *Handler) getAllComment(w http.ResponseWriter, r *http.Request) {
 	comments, err := h.service.Comment.GetAllComment(r.Context())
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Failed to get comments")
 		return
 	}
-	buf, err := json.Marshal(&comments)
-	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(buf)
+
+	h.writeJSONResponse(w, http.StatusOK, map[string]interface{}{
+		"comments": comments,
+	})
 }
 
 func (h *Handler) getCommentByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
-		msg := "ID not found in URL path"
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "ID not found in URL path")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Invalid comment ID")
 		return
 	}
+
 	comment, err := h.service.Comment.GetCommentById(r.Context(), id)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusInternalServerError, "Failed to retrieve comment")
 		return
 	}
-	body, err := json.Marshal(comment)
-	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(body)
 
+	h.writeJSONResponse(w, http.StatusOK, comment)
 }
 
 func (h *Handler) deleteComment(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(userID)
 	if userId.(int) <= 0 {
-		log.Println("comment")
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, `{
-			"msg":"Status Unauthorized"
-		}`)
+		h.handleError(w, http.StatusUnauthorized, "Status Unauthorized")
 		return
 	}
+
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
-		msg := "ID not found in URL path"
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "ID not found in URL path")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Invalid ID format")
 		return
 	}
-	if err := h.service.Comment.Delete(r.Context(), id, userId.(int)); err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+
+	err = h.service.Comment.Delete(r.Context(), id, userId.(int))
+	if err != nil {
+		h.handleError(w, http.StatusInternalServerError, "Failed to delete comment")
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, `{
-		"msg":"Delete success"
-	}`)
+
+	h.writeJSONResponse(w, http.StatusOK, map[string]string{
+		"msg": "Comment deleted successfully",
+	})
 }
 
 func (h *Handler) updateComment(w http.ResponseWriter, r *http.Request) {
-	var inp commentInput
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
-		msg := "ID not found in URL path"
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "ID not found in URL path")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Invalid comment ID")
 		return
 	}
+
+	var inp commentInput
+	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
+		h.handleError(w, http.StatusBadRequest, "Failed to decode request body")
+		return
+	}
+
 	if err := h.service.Comment.Update(r.Context(), domain.Comment{
 		Text:     inp.Text,
 		UpdateAt: time.Now(),
 		Id:       id,
 	}); err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusInternalServerError, "Failed to update comment")
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, `{
-		"msg":"Update success"
-	}`)
+
+	h.writeJSONResponse(w, http.StatusOK, map[string]string{
+		"msg": "Update success",
+	})
 }

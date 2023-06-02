@@ -1,7 +1,7 @@
 package http
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 )
 
@@ -16,13 +16,19 @@ func (h *Handler) setCorsHeaders(handler http.Handler) http.Handler {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
+
 		handler.ServeHTTP(w, r)
 	})
 }
-
-func (h *Handler) logMiddleware(next http.Handler) http.Handler {
+func (h *Handler) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Method:%v, URL:%v", r.Method, r.URL.Path)
+		h.log.Info(fmt.Sprintf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.String()))
+
+		defer func() {
+			if err := recover(); err != nil {
+				h.handleError(w, http.StatusInternalServerError, "Internal Server Error")
+			}
+		}()
 
 		next.ServeHTTP(w, r)
 	})

@@ -1,10 +1,7 @@
 package v1
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/begenov/real-time-forum/internal/domain"
@@ -20,14 +17,13 @@ func (h *Handler) InitUserRouter(router *mux.Router) {
 
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 	var inp domain.UserInput
-
-	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
-		msg := fmt.Sprintf("error decode: %v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+	err := parseInput(r.Body, inp)
+	if err != nil {
+		h.handleError(w, http.StatusBadRequest, "Failed to decode JSON: "+err.Error())
 		return
 	}
 
-	if err := h.service.User.SignUp(context.Background(), domain.User{
+	if err := h.service.User.SignUp(r.Context(), domain.User{
 		Nickname:  inp.Nickname,
 		Age:       inp.Age,
 		Gender:    inp.Gender,
@@ -36,36 +32,31 @@ func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
 		Email:     inp.Email,
 		Password:  inp.Password,
 	}); err != nil {
-		msg := fmt.Sprintf(" %v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Bad Request "+err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, `{
-		"msg":"Create User"
-	}`)
+	h.writeJSONResponse(w, http.StatusOK, map[string]string{
+		"msg": "User created successfully",
+	})
 }
 
-type singIn struct {
+type signIn struct {
 	Auth     string `json:"username"`
 	Password string `json:"password"`
 }
 
 func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
-	var inp singIn
+	var inp signIn
 
 	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
-		msg := fmt.Sprintf("error decode: %v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Failed to decode JSON: "+err.Error())
 		return
 	}
 
-	session, err := h.service.User.SignIn(context.Background(), inp.Auth, inp.Password)
+	session, err := h.service.User.SignIn(r.Context(), inp.Auth, inp.Password)
 	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Bad Request "+err.Error())
 		return
 	}
 
@@ -76,38 +67,21 @@ func (h *Handler) signIn(w http.ResponseWriter, r *http.Request) {
 		Value:    session.Token,
 		HttpOnly: true,
 	})
-	var token struct {
-		Token string `json:"token"`
-	}
-	token.Token = session.Token
-	data, err := json.Marshal(&token)
-	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+
+	h.writeJSONResponse(w, http.StatusOK, map[string]string{
+		"token": session.Token,
+	})
 }
 
 func (h *Handler) logOut(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session")
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, `{
-			"msg":"Status Unauthorized"
-		}`)
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	if err := h.service.User.DeleteSession(context.Background(), cookie.Value); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{
-			"msg":"Status Bad Request"
-		}`)
+	if err := h.service.User.DeleteSession(r.Context(), cookie.Value); err != nil {
+		h.handleError(w, http.StatusBadRequest, "Failed to log out "+err.Error())
 		return
 	}
 
@@ -116,40 +90,22 @@ func (h *Handler) logOut(w http.ResponseWriter, r *http.Request) {
 	cookie.Name = "session"
 	cookie.Path = "/"
 	http.SetCookie(w, cookie)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Log out success"))
+
+	h.writeJSONResponse(w, http.StatusOK, "Log out success")
 }
 
 func (h *Handler) checkUser(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session")
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		io.WriteString(w, `{
-			"msg":"Status Unauthorized"
-		}`)
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	user, err := h.service.User.GetUserByToken(r.Context(), cookie.Value)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		io.WriteString(w, `{
-			"msg":"Status Bad Request"
-		}`)
-		return
-	}
-	body, err := json.Marshal(user.Nickname)
-	if err != nil {
-		msg := fmt.Sprintf("%v", err)
-		h.errorResponse(w, msg, http.StatusBadRequest)
+		h.handleError(w, http.StatusBadRequest, "Bad Request "+err.Error())
 		return
 	}
 
-	fmt.Println(user.Nickname)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(body)
+	h.writeJSONResponse(w, http.StatusOK, user.Nickname)
 }
