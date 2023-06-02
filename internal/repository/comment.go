@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log"
 
 	"github.com/begenov/real-time-forum/internal/domain"
 )
@@ -18,9 +19,10 @@ func NewCommentRepo(db *sql.DB) *CommentRepo {
 }
 
 func (r *CommentRepo) Create(ctx context.Context, comment domain.Comment) error {
-	stmt := `INSERT INTO comment (post_id, user_id, text, create_at, update_at) VALUES(&1, $2, $3, $4, $5)`
+	stmt := `INSERT INTO comment (post_id, user_id, text, create_at, update_at) VALUES($1, $2, $3, $4, $5)`
 	_, err := r.db.ExecContext(ctx, stmt, comment.PostID, comment.UserID, comment.Text, comment.CreateAt, comment.UpdateAt)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -64,7 +66,7 @@ func (r *CommentRepo) GetAllComment(ctx context.Context) ([]domain.Comment, erro
 
 func (r *CommentRepo) GetCommentByID(ctx context.Context, id int) (domain.Comment, error) {
 	var comment domain.Comment
-	stmt := `SELECT * FROM comment WHERE id = &1`
+	stmt := `SELECT * FROM comment WHERE id = $1`
 	err := r.db.QueryRowContext(ctx, stmt, id).Scan(&comment.Id, &comment.PostID, &comment.UserID, &comment.Text, &comment.CreateAt, &comment.UpdateAt)
 	if err != nil {
 		return comment, err
