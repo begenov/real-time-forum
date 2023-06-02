@@ -14,11 +14,12 @@ import (
 )
 
 func (h *Handler) InitPostRouter(router *mux.Router) {
+
 	router.HandleFunc("/api/v1/post", h.getAllPosts).Methods("GET")
 	router.HandleFunc("/api/v1/post/{id}", h.getPostByID).Methods("GET")
-	router.HandleFunc("/api/v1/post/create", h.createPost).Methods("POST")
-	router.HandleFunc("/api/v1/post/update/{id}", h.updatePost).Methods("PUT")
-	router.HandleFunc("/api/v1/post/delete/{id}", h.deletePost).Methods("DELETE")
+	router.HandleFunc("/api/v1/post/create", h.userIdentity(h.createPost)).Methods("POST")
+	router.HandleFunc("/api/v1/post/update/{id}", h.userIdentity(h.updatePost)).Methods("PUT")
+	router.HandleFunc("/api/v1/post/delete/{id}", h.userIdentity(h.deletePost)).Methods("DELETE")
 
 }
 
@@ -49,6 +50,17 @@ type postInput struct {
 }
 
 func (h *Handler) createPost(w http.ResponseWriter, r *http.Request) {
+
+	userId := r.Context().Value(userID)
+	if userId.(int) <= 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		io.WriteString(w, `{
+			"msg":"Status Unauthorized"
+		}`)
+		return
+	}
+
 	var inp postInput
 	if err := json.NewDecoder(r.Body).Decode(&inp); err != nil {
 		msg := fmt.Sprintf("error decode: %v", err)
@@ -60,6 +72,7 @@ func (h *Handler) createPost(w http.ResponseWriter, r *http.Request) {
 		Description: inp.Description,
 		Category:    inp.Category,
 		CreateAt:    time.Now(),
+		UserID:      userId.(int),
 		UpdateAt:    time.Now(),
 	}); err != nil {
 		msg := fmt.Sprintf("%v", err)
@@ -111,6 +124,16 @@ func (h *Handler) getPostByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) updatePost(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value(userID)
+	if userId.(int) <= 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		io.WriteString(w, `{
+			"msg":"Status Unauthorized"
+		}`)
+		return
+	}
+
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
@@ -137,6 +160,7 @@ func (h *Handler) updatePost(w http.ResponseWriter, r *http.Request) {
 		Category:    inp.Category,
 		UpdateAt:    time.Now(),
 		ID:          id,
+		UserID:      userId.(int),
 	}); err != nil {
 		msg := fmt.Sprintf("%v", err)
 		h.errorResponse(w, msg, http.StatusBadRequest)
@@ -150,6 +174,15 @@ func (h *Handler) updatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deletePost(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value(userID)
+	if userId.(int) <= 0 {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		io.WriteString(w, `{
+			"msg":"Status Unauthorized"
+		}`)
+		return
+	}
 	vars := mux.Vars(r)
 	idStr, ok := vars["id"]
 	if !ok {
@@ -164,7 +197,7 @@ func (h *Handler) deletePost(w http.ResponseWriter, r *http.Request) {
 		h.errorResponse(w, msg, http.StatusBadRequest)
 		return
 	}
-	if err := h.service.Post.Delete(r.Context(), id); err != nil {
+	if err := h.service.Post.Delete(r.Context(), id, userId.(int)); err != nil {
 		msg := fmt.Sprintf("%v", err)
 		h.errorResponse(w, msg, http.StatusBadRequest)
 		return
