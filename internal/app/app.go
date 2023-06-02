@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -15,14 +14,18 @@ import (
 	"github.com/begenov/real-time-forum/internal/service"
 	"github.com/begenov/real-time-forum/pkg/auth"
 	"github.com/begenov/real-time-forum/pkg/hash"
+	"github.com/begenov/real-time-forum/pkg/logger"
 	opendb "github.com/begenov/real-time-forum/pkg/open_db"
 )
 
 const path = "./migration/init.up.sql"
 
 func Run(cfg *config.Config) error {
+	l := logger.NewLog()
+
 	db, err := opendb.OpenDB(context.Background(), cfg.Database.Driver, cfg.Database.Dsn, path)
 	if err != nil {
+		l.Error("connect open db:", err)
 		return err
 	}
 
@@ -34,17 +37,17 @@ func Run(cfg *config.Config) error {
 
 	service := service.NewService(repo, hash, manager, cfg)
 
-	handler := delivery.NewHandler(service)
+	handler := delivery.NewHandler(service, l)
 
 	srv := server.NewServer(cfg, handler.Init())
 
 	go func() {
 		if err := srv.Run(); !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("error occurred while running http server: %s\n", err)
+			l.Error("error occurred while running http server: %s\n", err)
 		}
 	}()
 
-	log.Println("Server started", cfg.Server.Port)
+	l.Info("Server started", cfg.Server.Port)
 
 	quit := make(chan os.Signal, 1)
 
@@ -56,7 +59,7 @@ func Run(cfg *config.Config) error {
 	defer shutdown()
 
 	if err := srv.Stop(ctx); err != nil {
-		log.Fatalf("failed to stop server: %v", err)
+		l.Error("failed to stop server: %v", err)
 	}
 
 	return nil
