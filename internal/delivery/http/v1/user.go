@@ -15,7 +15,7 @@ func (h *Handler) InitUserRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/sign-up", h.signUp).Methods("POST")
 	router.HandleFunc("/api/v1/sign-in", h.signIn).Methods("POST")
 	router.HandleFunc("/api/v1/log-out", h.logOut).Methods("POST")
-	router.HandleFunc("/api/v1/check-user", h.checkUser)
+	router.HandleFunc("/api/v1/check-user", h.checkUser).Methods("GET")
 }
 
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
