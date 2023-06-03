@@ -33,7 +33,24 @@ CREATE TABLE IF NOT EXISTS category (
 );
 
 INSERT INTO category(title)
-VALUES ("Golang"), ("Python"), ("Java"), ("Js"), ("Php");
+SELECT 'Golang'
+WHERE NOT EXISTS (SELECT * FROM category WHERE title = 'Golang');
+
+INSERT INTO category(title)
+SELECT 'Python'
+WHERE NOT EXISTS (SELECT * FROM category WHERE title = 'Python');
+
+INSERT INTO category(title)
+SELECT 'Java'
+WHERE NOT EXISTS (SELECT * FROM category WHERE title = 'Java');
+
+INSERT INTO category(title)
+SELECT 'Js'
+WHERE NOT EXISTS (SELECT * FROM category WHERE title = 'Js');
+
+INSERT INTO category(title)
+SELECT 'Php'
+WHERE NOT EXISTS (SELECT * FROM category WHERE title = 'Php');
 
 CREATE TABLE IF NOT EXISTS post_category (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

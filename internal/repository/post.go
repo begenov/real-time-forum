@@ -30,7 +30,6 @@ func (r *PostRepo) Create(ctx context.Context, post domain.Post) error {
 	defer stmt.Close()
 	res, err := stmt.ExecContext(ctx, post.UserID, post.Title, post.Description, post.CreateAt, post.UpdateAt)
 	if err != nil {
-
 		tx.Rollback()
 		return err
 	}
@@ -46,7 +45,6 @@ func (r *PostRepo) Create(ctx context.Context, post domain.Post) error {
 	for _, categoryID := range post.CategoryID {
 		_, err := tx.ExecContext(ctx, st, id, categoryID)
 		if err != nil {
-
 			tx.Rollback()
 			return err
 		}
@@ -61,7 +59,6 @@ func (r *PostRepo) Update(ctx context.Context, post domain.Post) error {
 		return err
 	}
 
-	// Update post details in the post table
 	stmt := `UPDATE post SET title = $1, description = $2, update_at = $3 WHERE id = $4`
 	_, err = tx.ExecContext(ctx, stmt, post.Title, post.Description, post.UpdateAt, post.ID)
 	if err != nil {
@@ -77,7 +74,6 @@ func (r *PostRepo) Update(ctx context.Context, post domain.Post) error {
 			return err
 		}
 
-		// Insert new post-category relationships
 		stmt = `INSERT INTO post_category (post_id, category_id) VALUES ($1, $2)`
 		for _, category := range post.CategoryID {
 			_, err = tx.ExecContext(ctx, stmt, post.ID, category)
@@ -87,7 +83,6 @@ func (r *PostRepo) Update(ctx context.Context, post domain.Post) error {
 			}
 		}
 	}
-	// Delete existing post-category relationships for the post
 
 	err = tx.Commit()
 	if err != nil {
@@ -148,7 +143,7 @@ func (r *PostRepo) GetAllPosts(ctx context.Context) ([]domain.Post, error) {
 	defer rows.Close()
 
 	var posts []domain.Post
-	postIDs := make(map[int]bool) // Map to keep track of unique post IDs
+	postIDs := make(map[int]bool)
 
 	for rows.Next() {
 		var post domain.Post
@@ -161,7 +156,7 @@ func (r *PostRepo) GetAllPosts(ctx context.Context) ([]domain.Post, error) {
 		}
 
 		if _, ok := postIDs[post.ID]; !ok {
-			// New post encountered, add it to the slice
+
 			posts = append(posts, post)
 			postIDs[post.ID] = true
 		}
@@ -186,7 +181,6 @@ func (r *PostRepo) DeletePost(ctx context.Context, id int) error {
 		return err
 	}
 
-	// Delete entries from post_category table
 	stmt := `DELETE FROM post_category WHERE post_id = $1`
 	_, err = tx.ExecContext(ctx, stmt, id)
 	if err != nil {
@@ -194,7 +188,6 @@ func (r *PostRepo) DeletePost(ctx context.Context, id int) error {
 		return err
 	}
 
-	// Delete post from post table
 	stmt = `DELETE FROM post WHERE id = $1`
 	res, err := tx.ExecContext(ctx, stmt, id)
 	if err != nil {

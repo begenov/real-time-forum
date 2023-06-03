@@ -36,7 +36,7 @@ func (s *PostService) Create(ctx context.Context, post domain.Post) error {
 }
 
 func (s *PostService) Update(ctx context.Context, post domain.Post) error {
-	// Retrieve the existing post from the repository
+
 	existingPost, err := s.repo.GetPostByID(ctx, post.ID)
 	if err != nil {
 		return err
@@ -57,17 +57,12 @@ func (s *PostService) Update(ctx context.Context, post domain.Post) error {
 		existingPost.CategoryID = id
 	}
 
-	// Set the update timestamp
 	existingPost.UpdateAt = time.Now()
 
-	// Save the updated post using the repository
 	err = s.repo.Update(ctx, existingPost)
 	if err != nil {
 		return err
 	}
-
-	// Perform any other operations or return the appropriate response
-	// ...
 
 	return nil
 }
