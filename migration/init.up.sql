@@ -1,0 +1,56 @@
+CREATE TABLE IF NOT EXISTS user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nick_name VARCHAR(32) NOT NULL,
+    age INTEGER NOT NULL,
+    gender VARCHAR(32) NOT NULL, 
+    first_name VARCHAR(32) NOT NULL,
+    last_name VARCHAR(32) NOT NULL,
+    email VARCHAR(32) NOT NULL, 
+    password_hash VARCHAR(64) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS session (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL, 
+    token VARCHAR(64) NOT NULL,
+    expiration_time TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE 
+);
+
+CREATE TABLE IF NOT EXISTS post (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    create_at TIMESTAMP NOT NULL, 
+    update_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS category (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, 
+    title TEXT
+);
+
+INSERT INTO category(title)
+VALUES ("Golang"), ("Python"), ("Java"), ("Js"), ("Php");
+
+CREATE TABLE IF NOT EXISTS post_category (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL, 
+    category_id INTEGER NOT NULL, 
+    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES category(id) ON DELETE CASCADE
+);
+
+
+CREATE TABLE IF NOT EXISTS comment (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL, 
+    user_id INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    create_at TIMESTAMP NOT NULL, 
+    update_at TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES post (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE
+)
