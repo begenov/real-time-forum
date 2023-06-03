@@ -25,6 +25,8 @@ type Post interface {
 	GetPostById(ctx context.Context, id int) (domain.Post, error)
 	GetAllPosts(ctx context.Context) ([]domain.Post, error)
 	Delete(ctx context.Context, id int, userID int) error
+
+	GetAllCategories(ctx context.Context) ([]domain.Category, error)
 }
 
 type Comment interface {

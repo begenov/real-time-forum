@@ -92,3 +92,7 @@ func (s *PostService) Delete(ctx context.Context, id int, userID int) error {
 
 	return s.repo.DeletePost(ctx, id)
 }
+
+func (s *PostService) GetAllCategories(ctx context.Context) ([]domain.Category, error) {
+	return s.category.GetAllCategories(ctx)
+}

@@ -29,7 +29,7 @@ func (r *CategoryRepo) GetAllCategories(ctx context.Context) ([]domain.Category,
 	var categories []domain.Category
 	for row.Next() {
 		var category domain.Category
-		if err = row.Scan(&category.Id, category.Category); err != nil {
+		if err = row.Scan(&category.Id, &category.Category); err != nil {
 			return nil, err
 		}
 		categories = append(categories, category)

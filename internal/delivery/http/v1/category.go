@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"context"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,8 +13,18 @@ func (h *Handler) InitCategoryRouter(router *mux.Router) {
 }
 
 func (h *Handler) getCategories(w http.ResponseWriter, r *http.Request) {
-	res := []string{"Rust", "Go", "Python"}
-	h.writeJSONResponse(w, http.StatusOK, map[string][]string{
-		"categories": res,
-	})
+	userId := r.Context().Value(userID)
+	if userID, ok := userId.(int); !ok || userID <= 0 {
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	res, err := h.service.Post.GetAllCategories(context.Background())
+	if err != nil {
+		log.Println(err)
+		h.handleError(w, http.StatusBadRequest, "Bad Request")
+		return
+	}
+
+	h.writeJSONResponse(w, http.StatusOK, res)
 }
