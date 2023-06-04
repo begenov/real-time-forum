@@ -35,6 +35,7 @@ func (h *Handler) initRouter(router *mux.Router) {
 	v1.InitCategoryRouter(router)
 	v1.InitPostRouter(router)
 	v1.InitCommentRouter(router)
+	v1.InitWebSoketRoute(router)
 }
 
 func (h *Handler) handleError(w http.ResponseWriter, statusCode int, err interface{}) {
