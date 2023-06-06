@@ -119,7 +119,6 @@ func (h *Handler) deleteComment(w http.ResponseWriter, r *http.Request) {
 		h.handleError(w, http.StatusBadRequest, "Invalid ID format")
 		return
 	}
-
 	err = h.service.Comment.Delete(r.Context(), id, userId.(int))
 	if err != nil {
 		h.handleError(w, http.StatusInternalServerError, "Failed to delete comment")

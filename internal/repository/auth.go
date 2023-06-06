@@ -73,3 +73,20 @@ func (r *AuthorizationRepo) UpdatePassword(ctx context.Context, password string,
 
 	return nil
 }
+
+func (r *AuthorizationRepo) AllUsers(ctx context.Context) ([]domain.Users, error) {
+	var users []domain.Users
+	stmt := `SELECT id, nick_name FROM user`
+	row, err := r.db.QueryContext(ctx, stmt)
+	if err != nil {
+		return nil, err
+	}
+	for row.Next() {
+		var user domain.Users
+		if err := row.Scan(&user.ID, &user.Nickname); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}

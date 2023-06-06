@@ -17,6 +17,7 @@ type User interface {
 	GetUserByID(ctx context.Context, id int) (domain.User, error)
 	DeleteSession(ctx context.Context, value string) error
 	GetUserByToken(ctx context.Context, value string) (domain.User, error)
+	AllUsers(ctx context.Context) ([]domain.Users, error)
 }
 
 type Post interface {

@@ -13,6 +13,7 @@ type Authorization interface {
 	GetByNickname(ctx context.Context, nickname string) (domain.User, error)
 	GetByEmail(ctx context.Context, email string) (domain.User, error)
 	UpdatePassword(ctx context.Context, password string, id int) error
+	AllUsers(ctx context.Context) ([]domain.Users, error)
 }
 
 type Session interface {

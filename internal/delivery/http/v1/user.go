@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/begenov/real-time-forum/internal/domain"
@@ -12,6 +13,7 @@ func (h *Handler) InitUserRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/sign-in", h.signIn).Methods("POST")
 	router.HandleFunc("/api/v1/log-out", h.logOut).Methods("POST")
 	router.HandleFunc("/api/v1/check-user", h.userIdentity(h.checkUser)).Methods("GET")
+	router.HandleFunc("/api/v1/users", h.users)
 }
 
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
@@ -107,4 +109,15 @@ func (h *Handler) checkUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.writeJSONResponse(w, http.StatusOK, user.Nickname)
+}
+
+func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
+	users, err := h.service.User.AllUsers(context.Background())
+	if err != nil {
+		h.handleError(w, http.StatusBadRequest, "Bad Request ")
+		return
+	}
+	h.writeJSONResponse(w, http.StatusOK, map[string]interface{}{
+		"token": users,
+	})
 }
