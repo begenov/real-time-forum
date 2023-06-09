@@ -49,13 +49,13 @@ func (h *Handler) handleWebSocketMessages(conn *websocket.Conn) {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			h.log.Error("Failed to read WebSocket message: ", err)
-			break
+			continue
 		}
 
 		var message Message
 		if err := json.Unmarshal(msg, &message); err != nil {
 			fmt.Println(err)
-			break
+			continue
 		}
 
 		h.broadcastMessage(message, conn)
