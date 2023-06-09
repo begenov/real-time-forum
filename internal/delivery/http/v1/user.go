@@ -121,6 +121,6 @@ func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.writeJSONResponse(w, http.StatusOK, map[string]interface{}{
-		"token": users,
+		"user": users,
 	})
 }
