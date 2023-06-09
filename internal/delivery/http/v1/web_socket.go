@@ -2,7 +2,6 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -54,7 +53,11 @@ func (h *Handler) handleWebSocketMessages(conn *websocket.Conn) {
 
 		var message Message
 		if err := json.Unmarshal(msg, &message); err != nil {
-			fmt.Println(err)
+			if e, ok := err.(*json.SyntaxError); ok {
+				h.log.Error("syntax error at byte offset", e.Offset)
+				continue
+			}
+			h.log.Error(err)
 			continue
 		}
 
