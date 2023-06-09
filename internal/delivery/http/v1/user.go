@@ -108,7 +108,10 @@ func (h *Handler) checkUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.writeJSONResponse(w, http.StatusOK, user.Nickname)
+	h.writeJSONResponse(w, http.StatusOK, domain.Users{
+		ID:       user.Id,
+		Nickname: user.Nickname,
+	})
 }
 
 func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
