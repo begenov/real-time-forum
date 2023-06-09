@@ -48,17 +48,17 @@ func (h *Handler) handleWebSocketMessages(conn *websocket.Conn) {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			h.log.Error("Failed to read WebSocket message: ", err)
-			continue
+			break
 		}
 
 		var message Message
 		if err := json.Unmarshal(msg, &message); err != nil {
 			if e, ok := err.(*json.SyntaxError); ok {
 				h.log.Error("syntax error at byte offset", e.Offset)
-				continue
+				break
 			}
 			h.log.Error(err)
-			continue
+			break
 		}
 
 		h.broadcastMessage(message, conn)
