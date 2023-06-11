@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (h *Handler) InitCommentRouter(router *mux.Router) {
+func (h *Handler) initCommentRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/post/comment", h.userIdentity(h.getAllComment))
 	router.HandleFunc("/api/v1/post/comment/{id}", h.userIdentity(h.getCommentByID))
 	router.HandleFunc("/api/v1/post/comment/create/{id}", h.userIdentity(h.createComment))

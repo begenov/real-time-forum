@@ -10,7 +10,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (h *Handler) InitPostRouter(router *mux.Router) {
+func (h *Handler) initPostRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/post", h.userIdentity(h.getAllPosts)).Methods("GET")
 	router.HandleFunc("/api/v1/post/{id}", h.userIdentity(h.getPostByID)).Methods("GET")
 	router.HandleFunc("/api/v1/post/create", h.userIdentity(h.createPost)).Methods("POST")
