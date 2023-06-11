@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (h *Handler) InitCategoryRouter(router *mux.Router) {
+func (h *Handler) initCategoryRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/categories", h.userIdentity(h.getCategories)).Methods("GET")
 }
 
