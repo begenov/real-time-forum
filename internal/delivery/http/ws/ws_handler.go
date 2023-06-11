@@ -1,117 +1,102 @@
 package ws
 
 import (
+	"encoding/json"
+	"log"
 	"net/http"
 
+	"github.com/begenov/real-time-forum/internal/domain"
+	"github.com/begenov/real-time-forum/internal/service"
 	"github.com/gorilla/websocket"
 )
 
 type Handler struct {
-	hub *Hub
+	clients  map[int]*client
+	upgrader websocket.Upgrader
+	service  *service.Service
+	wsEvent  chan *domain.WSEvent
 }
 
-func NewHandler(h *Hub) *Handler {
+func NewHandler(service *service.Service, wsEvent chan *domain.WSEvent) *Handler {
+	var upgrader = websocket.Upgrader{
+		ReadBufferSize:  4096,
+		WriteBufferSize: 4096,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
 	return &Handler{
-		hub: h,
+		upgrader: upgrader,
+		service:  service,
+		clients:  make(map[int]*client),
+		wsEvent:  wsEvent,
 	}
 }
 
-type CreateRoomReq struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+func (h *Handler) ServeWS(w http.ResponseWriter, r *http.Request) {
+	connect, err := h.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("error connection %v", err)
+		return
+	}
+
+	connection := &conn{conn: connect}
+
+	cookie, err := r.Cookie("session")
+	if err != nil {
+		log.Printf("error cookie ws %v", err)
+		return
+	}
+
+	user, err := h.service.User.GetUserByToken(r.Context(), cookie.Value)
+	if err != nil {
+		log.Printf("error get user by token %v", err)
+		return
+	}
+
+	c, ok := h.clients[user.Id]
+	if !ok {
+		c = &client{User: user}
+		h.clients[user.Id] = c
+	}
+
+	c.conns = append(c.conns, connection)
+	go h.handleClientMessages(user.Id, connection)
 }
 
-func (h *Handler) CreateRoom(w http.ResponseWriter, r *http.Request) {
-	// var req CreateRoomReq
-	// if err := c.ShouldBindJSON(&req); err != nil {
+func (h *Handler) handleClientMessages(id int, connection *conn) {
 
-	// 	return
-	// }
+	for {
+		event, err := connection.getEvent()
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
 
-	// h.hub.Rooms[req.ID] = &Room{
-	// 	ID:      req.ID,
-	// 	Name:    req.Name,
-	// 	Clients: make(map[string]*Client),
-	// }
-
-}
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func (h *Handler) JoinRoom(w http.ResponseWriter, r *http.Request) {
-	// conn, err := upgrader.Upgrade(w, r, nil)
-	// if err != nil {
-	// 	// c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
-	// roomID := c.Param("roomId")
-	// clientID := c.Query("userId")
-	// username := c.Query("username")
-
-	// cl := &Client{
-	// 	Conn:     conn,
-	// 	Message:  make(chan *Message, 10),
-	// 	ID:       clientID,
-	// 	RoomID:   roomID,
-	// 	Username: username,
-	// }
-
-	// m := &Message{
-	// 	Content:  "A new user has joined the room",
-	// 	RoomID:   roomID,
-	// 	Username: username,
-	// }
-
-	// h.hub.Register <- cl
-	// h.hub.Broadcast <- m
-
-	// go cl.WriteMessage()
-	// cl.ReadMessage(h.hub)
-}
-
-type RoomRes struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-func (h *Handler) GetRooms(w http.ResponseWriter, r *http.Request) {
-	rooms := make([]RoomRes, 0)
-
-	for _, r := range h.hub.Rooms {
-		rooms = append(rooms, RoomRes{
-			// ID:   r.ID,
-			Name: r.Name,
-		})
+		switch event.Type {
+		case "message":
+			h.newMessage(connection.clientID, &event)
+		}
 	}
 
 }
 
-type ClientRes struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
+type messageInput struct {
+	RecipientID int    `json:"recipent_id"`
+	Message     string `json:"message"`
 }
 
-func (h *Handler) GetClients(w http.ResponseWriter, r *http.Request) {
-	// var clients []ClientRes
-	// roomId := c.Param("roomId")
+func (h *Handler) newMessage(clientID int, event *domain.WSEvent) error {
+	var inp messageInput
 
-	// if _, ok := h.hub.Rooms[roomId]; !ok {
-	// 	clients = make([]ClientRes, 0)
+	body, err := json.Marshal(event.Body)
+	if err != nil {
+		return err
+	}
 
-	// }
-
-	// for _, c := range h.hub.Rooms[roomId].Clients {
-	// 	clients = append(clients, ClientRes{
-	// 		ID:       c.ID,
-	// 		Username: c.Username,
-	// 	})
-	// }
-
+	if err := json.Unmarshal(body, &inp); err != nil {
+		return err
+	}
+	return nil
 }
