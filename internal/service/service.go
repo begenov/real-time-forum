@@ -54,5 +54,6 @@ func NewService(repo *repository.Repository, hash hash.PasswordHasher, manager a
 		User:    NewUserService(repo.Authorization, repo.Session, hash, manager, cfg.Token),
 		Post:    NewPostService(repo.Post, repo.Category),
 		Comment: NewCommentService(repo.Comment),
+		Chat:    NewChatService(repo.Chat),
 	}
 }
