@@ -120,6 +120,18 @@ func (h *Handler) newMessage(clientID int, event *domain.WSEvent) error {
 }
 func (h *Handler) allUsers(userID int, cons []*conn) {
 	ticker := time.NewTicker(5000 * time.Millisecond)
+	go func() {
+		users, err := h.service.User.AllUsers(context.Background(), userID)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		for _, conn := range cons {
+			conn.conn.WriteJSON(map[string][]domain.Users{
+				"online_users": users,
+			})
+		}
+	}()
 
 	for range ticker.C {
 		users, err := h.service.User.AllUsers(context.Background(), userID)
@@ -128,7 +140,9 @@ func (h *Handler) allUsers(userID int, cons []*conn) {
 			return
 		}
 		for _, conn := range cons {
-			conn.conn.WriteJSON(users)
+			conn.conn.WriteJSON(map[string][]domain.Users{
+				"online_users": users,
+			})
 		}
 
 	}
