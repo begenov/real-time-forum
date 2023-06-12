@@ -127,8 +127,9 @@ func (h *Handler) allUsers(userID int, cons []*conn) {
 			return
 		}
 		for _, conn := range cons {
-			conn.conn.WriteJSON(map[string][]domain.Users{
-				"online_users": users,
+			conn.conn.WriteJSON(domain.WSEvent{
+				Type: "online_users",
+				Body: users,
 			})
 		}
 	}()
@@ -140,8 +141,9 @@ func (h *Handler) allUsers(userID int, cons []*conn) {
 			return
 		}
 		for _, conn := range cons {
-			conn.conn.WriteJSON(map[string][]domain.Users{
-				"online_users": users,
+			conn.conn.WriteJSON(domain.WSEvent{
+				Type: "online_users",
+				Body: users,
 			})
 		}
 
