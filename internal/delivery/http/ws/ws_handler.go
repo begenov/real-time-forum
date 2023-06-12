@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -76,7 +77,12 @@ func (h *Handler) handleClientMessages(id int, connection *conn) {
 
 		switch event.Type {
 		case "message":
-			h.newMessage(connection.clientID, &event)
+			err = h.newMessage(connection.clientID, &event)
+		}
+
+		if err != nil {
+			log.Println(err)
+			return
 		}
 	}
 
@@ -98,5 +104,14 @@ func (h *Handler) newMessage(clientID int, event *domain.WSEvent) error {
 	if err := json.Unmarshal(body, &inp); err != nil {
 		return err
 	}
+
+	if err := h.service.Chat.Create(context.Background(), domain.Message{
+		FromUserID: clientID,
+		ToUserID:   event.RecipientID,
+		Text:       inp.Message,
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }
