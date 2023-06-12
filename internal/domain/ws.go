@@ -1,7 +1,7 @@
 package domain
 
 type WSEvent struct {
-	Type        string
-	Body        any
-	RecipientID int
+	Type        string `json:"type"`
+	Body        any    `json:"body"`
+	RecipientID int    `json:"recipient_id"`
 }
