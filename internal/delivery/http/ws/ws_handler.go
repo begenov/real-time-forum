@@ -89,7 +89,7 @@ func (h *Handler) handleClientMessages(id int, connection *conn) {
 }
 
 type messageInput struct {
-	RecipientID int    `json:"recipent_id"`
+	RecipientID int    `json:"to_user_id"`
 	Message     string `json:"message"`
 }
 
