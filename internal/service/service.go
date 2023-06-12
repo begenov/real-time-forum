@@ -38,10 +38,15 @@ type Comment interface {
 	Delete(ctx context.Context, id int, userId int) error
 }
 
+type Chat interface {
+	Create(ctx context.Context, msg domain.Message) error
+}
+
 type Service struct {
 	User    User
 	Post    Post
 	Comment Comment
+	Chat    Chat
 }
 
 func NewService(repo *repository.Repository, hash hash.PasswordHasher, manager auth.TokenManager, cfg *config.Config) *Service {
