@@ -47,12 +47,17 @@ type Comment interface {
 	GetCommentByID(ctx context.Context, id int) (domain.Comment, error)
 }
 
+type Chat interface {
+	Create(ctx context.Context, msg domain.Message) error
+}
+
 type Repository struct {
 	Authorization Authorization
 	Session       Session
 	Post          Post
 	Category      Category
 	Comment       Comment
+	Chat          Chat
 }
 
 func NewRepository(db *sql.DB) *Repository {
@@ -62,5 +67,6 @@ func NewRepository(db *sql.DB) *Repository {
 		Post:          NewPostRepo(db),
 		Category:      NewCategoryRepo(db),
 		Comment:       NewCommentRepo(db),
+		Chat:          NewChatRepo(db),
 	}
 }
