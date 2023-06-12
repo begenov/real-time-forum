@@ -4,7 +4,7 @@
         "dsn":"forum.db"
     },
     "server":{
-        "port":"8080",
+        "port":"8000",
         "readtimeout":10,
         "writetimeout":10,
         "maxheadermegabytes":1
