@@ -76,9 +76,8 @@ CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     from_user_id INTEGER NOT NULL,
     to_user_id INTEGER NOT NULL, 
-    messages TEXT,
+    message TEXT,
     create_at TIMESTAMP NOT NULL,
-    update_at TIMESTAMP,
     FOREIGN KEY (from_user_id) REFERENCES user (id) ON DELETE CASCADE,
     FOREIGN KEY (to_user_id) REFERENCES user (id) ON DELETE CASCADE
 )
