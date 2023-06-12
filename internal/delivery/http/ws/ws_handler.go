@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/begenov/real-time-forum/internal/domain"
 	"github.com/begenov/real-time-forum/internal/service"
@@ -16,6 +17,7 @@ type Handler struct {
 	upgrader websocket.Upgrader
 	service  *service.Service
 	wsEvent  chan *domain.WSEvent
+	users    map[int]domain.Users
 }
 
 func NewHandler(service *service.Service, wsEvent chan *domain.WSEvent) *Handler {
@@ -64,6 +66,7 @@ func (h *Handler) ServeWS(w http.ResponseWriter, r *http.Request) {
 
 	c.conns = append(c.conns, connection)
 	go h.handleClientMessages(user.Id, connection)
+	go h.allUsers(user.Id, c.conns)
 }
 
 func (h *Handler) handleClientMessages(id int, connection *conn) {
@@ -114,4 +117,20 @@ func (h *Handler) newMessage(clientID int, event *domain.WSEvent) error {
 	}
 
 	return nil
+}
+func (h *Handler) allUsers(userID int, cons []*conn) {
+	ticker := time.NewTicker(5000 * time.Millisecond)
+
+	for range ticker.C {
+		users, err := h.service.User.AllUsers(context.Background(), userID)
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		for _, conn := range cons {
+			conn.conn.WriteJSON(users)
+		}
+
+	}
+
 }

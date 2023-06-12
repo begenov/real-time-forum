@@ -28,4 +28,5 @@ type UserInput struct {
 type Users struct {
 	ID       int    `json:"id"`
 	Nickname string `json:"nickname"`
+	Online   bool   `json:"online"`
 }

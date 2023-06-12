@@ -115,7 +115,7 @@ func (h *Handler) checkUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
-	users, err := h.service.User.AllUsers(context.Background())
+	users, err := h.service.User.AllUsers(context.Background(), 0)
 	if err != nil {
 		h.handleError(w, http.StatusBadRequest, "Bad Request ")
 		return

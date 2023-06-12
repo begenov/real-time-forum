@@ -74,10 +74,10 @@ func (r *AuthorizationRepo) UpdatePassword(ctx context.Context, password string,
 	return nil
 }
 
-func (r *AuthorizationRepo) AllUsers(ctx context.Context) ([]domain.Users, error) {
+func (r *AuthorizationRepo) AllUsers(ctx context.Context, userID int) ([]domain.Users, error) {
 	var users []domain.Users
-	stmt := `SELECT id, nick_name FROM user`
-	row, err := r.db.QueryContext(ctx, stmt)
+	stmt := `SELECT id, nick_name FROM user WHERE id <> ? `
+	row, err := r.db.QueryContext(ctx, stmt, userID)
 	if err != nil {
 		return nil, err
 	}

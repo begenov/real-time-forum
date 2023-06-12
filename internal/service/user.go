@@ -143,6 +143,6 @@ func (s *UserService) DeleteSession(ctx context.Context, value string) error {
 	return s.session.Delete(ctx, value)
 }
 
-func (s *UserService) AllUsers(ctx context.Context) ([]domain.Users, error) {
-	return s.auth.AllUsers(ctx)
+func (s *UserService) AllUsers(ctx context.Context, userID int) ([]domain.Users, error) {
+	return s.auth.AllUsers(ctx, userID)
 }
