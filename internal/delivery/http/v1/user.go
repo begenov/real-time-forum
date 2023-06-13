@@ -13,7 +13,7 @@ func (h *Handler) initUserRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/sign-in", h.signIn).Methods("POST")
 	router.HandleFunc("/api/v1/log-out", h.logOut).Methods("POST")
 	router.HandleFunc("/api/v1/check-user", h.userIdentity(h.checkUser)).Methods("GET")
-	router.HandleFunc("/api/v1/users", h.users).Methods("GET")
+	router.HandleFunc("/api/v1/users", h.userIdentity(h.users)).Methods("GET")
 }
 
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
