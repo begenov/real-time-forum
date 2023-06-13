@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/begenov/real-time-forum/internal/domain"
@@ -12,7 +13,7 @@ func (h *Handler) initUserRouter(router *mux.Router) {
 	router.HandleFunc("/api/v1/sign-in", h.signIn).Methods("POST")
 	router.HandleFunc("/api/v1/log-out", h.logOut).Methods("POST")
 	router.HandleFunc("/api/v1/check-user", h.userIdentity(h.checkUser)).Methods("GET")
-	// router.HandleFunc("/api/v1/users", h.users)
+	router.HandleFunc("/api/v1/users", h.users).Methods("GET")
 }
 
 func (h *Handler) signUp(w http.ResponseWriter, r *http.Request) {
@@ -111,4 +112,20 @@ func (h *Handler) checkUser(w http.ResponseWriter, r *http.Request) {
 		ID:       user.Id,
 		Nickname: user.Nickname,
 	})
+}
+
+func (h *Handler) users(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value(userID)
+	if userID, ok := userId.(int); !ok || userID <= 0 {
+		h.handleError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	users, err := h.service.User.AllUsers(context.Background(), 0)
+	if err != nil {
+		h.handleError(w, http.StatusBadRequest, "Bad Request "+err.Error())
+		return
+	}
+
+	h.writeJSONResponse(w, http.StatusOK, users)
 }
